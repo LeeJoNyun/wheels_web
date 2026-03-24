@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { KAKAO_REST_API_KEY } from "@/lib/kakao";
+import { NAVER_CLIENT_ID } from "@/lib/naver";
 import { createClient } from "@/lib/supabase/client";
 
 const PROVIDERS = [
@@ -46,23 +48,56 @@ const PROVIDERS = [
   },
 ];
 
+/** OAuth 리다이렉트 오류 문자열이 잘못 인코딩된 경우 decodeURIComponent가 URIError를 내 페이지 전체를 깨뜨리지 않도록 처리 */
+function decodeOAuthErrorMessage(raw: string): string {
+  try {
+    return decodeURIComponent(raw.replace(/\+/g, " "));
+  } catch {
+    return raw;
+  }
+}
+
 function LoginForm() {
   const searchParams = useSearchParams();
+  const errorParam = searchParams.get("error");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const err = searchParams.get("error");
-    if (err) setError(err === "no_code" ? "로그인 정보를 불러오지 못했습니다. 다시 시도해 주세요." : decodeURIComponent(err));
-  }, [searchParams]);
+    if (!errorParam) return;
+    setError(
+      errorParam === "no_code"
+        ? "로그인 정보를 불러오지 못했습니다. 다시 시도해 주세요."
+        : decodeOAuthErrorMessage(errorParam)
+    );
+  }, [errorParam]);
 
   const handleSocialLogin = async (provider: string) => {
     setError(null);
     setLoading(provider);
     try {
+      if (provider === "kakao" && !KAKAO_REST_API_KEY) {
+        setError("카카오 로그인 설정이 없습니다. NEXT_PUBLIC_KAKAO_REST_API_KEY를 확인해 주세요.");
+        setLoading(null);
+        return;
+      }
+      if (provider === "naver" && !NAVER_CLIENT_ID) {
+        setError("네이버 로그인 설정이 없습니다. NEXT_PUBLIC_NAVER_CLIENT_ID를 확인해 주세요.");
+        setLoading(null);
+        return;
+      }
+      // Supabase 기본 카카오 OAuth는 account_email scope를 항상 넣어 KOE205가 날 수 있음 → OIDC 경로(/auth/kakao) 사용
+      if (provider === "kakao") {
+        window.location.href = "/auth/kakao";
+        return;
+      }
+      if (provider === "naver") {
+        window.location.href = "/auth/naver";
+        return;
+      }
       const { data, error: err } = await supabase.auth.signInWithOAuth({
-        provider: provider as any,
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },

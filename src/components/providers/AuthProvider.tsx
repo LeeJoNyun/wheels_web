@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { syncProfileWithWheelsApi } from "@/lib/wheels-api";
 
 type AuthContextType = {
   user: User | null;
@@ -20,9 +21,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+      if (
+        session?.access_token &&
+        (event === "INITIAL_SESSION" || event === "SIGNED_IN")
+      ) {
+        void syncProfileWithWheelsApi(session.access_token);
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {

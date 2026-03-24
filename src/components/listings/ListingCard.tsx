@@ -3,14 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import type { FilteredListingRow } from "@/lib/listing-filters";
+
 interface ListingCardProps {
-  listing: {
-    id: string;
-    price: number;
-    mileage: number;
-    bike: { brand: string; model: string; year: number; engine_cc: number } | null;
-    listing_images?: { url: string; sort_order: number }[] | null;
-  };
+  listing: FilteredListingRow;
 }
 
 export function ListingCard({ listing }: ListingCardProps) {
