@@ -6,10 +6,34 @@ import { BRANDS } from "@/types/database";
 import { DualRangeSlider } from "@/components/listings/DualRangeSlider";
 import { parseListingFilters, type ListingFilterParams } from "@/lib/listing-filters";
 
-const CC_PRESETS = [125, 155, 250, 321, 400, 600, 1000] as const;
+/**
+ * 배기량 빠른 선택 — 표기 cc(299·301·321 등)가 섞여 있어 구간으로 검색.
+ * 리터급은 상한 없음(최소 cc만 URL에 넣음).
+ */
+const CC_CLASS_PRESETS = [
+  { min: 100, max: 170, label: "125cc급" },
+  { min: 130, max: 195, label: "155cc급" },
+  { min: 200, max: 335, label: "250cc급" },
+  { min: 255, max: 440, label: "300·쿼터" },
+  { min: 330, max: 550, label: "400cc급" },
+  { min: 500, max: 820, label: "600cc급" },
+  { min: 850, max: null as number | null, label: "리터↑" },
+] as const;
 
-const PRICE_CAP = 10000; // 만원
+/**
+ * 만원 단위. 값 === PRICE_CAP 이면 가격 상한 필터 없음(URL에 price_max 없음).
+ * 그 미만이면 최대 약 49.99억까지 지정 가능(할리 등 고가 매물 대응).
+ */
+const PRICE_CAP = 500_000;
 const MILEAGE_CAP = 200000; // km
+
+function formatWithComma(raw: string) {
+  const digits = raw.replace(/[^\d]/g, "");
+  if (!digits) return "";
+  const n = Number(digits);
+  if (Number.isNaN(n)) return "";
+  return n.toLocaleString("ko-KR");
+}
 
 function paramsToQuery(p: ListingFilterParams): string {
   const u = new URLSearchParams();
@@ -182,7 +206,9 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
     : `${mileageMin.toLocaleString()}km~${mileageMax.toLocaleString()}km`;
   const priceCenterLabel = priceIsFull
     ? "전체"
-    : `${priceMin.toLocaleString()}만원~${priceMax.toLocaleString()}만원`;
+    : priceMax >= PRICE_CAP
+      ? `${priceMin.toLocaleString()}만원~(상한 없음)`
+      : `${priceMin.toLocaleString()}만원~${priceMax.toLocaleString()}만원`;
 
   const applyMileageDirect = () => {
     const a = mileageMinIn === "" ? 0 : Number(mileageMinIn);
@@ -226,7 +252,9 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
 
         <div className="border-t border-gray-100 pt-3 pb-2">
           <p className="text-[15px] font-medium text-gray-800 mb-2">배기량 (cc)</p>
-          <p className="text-xs text-gray-500 mb-2">숫자만 입력 (예: 321, 또는 300~400 구간)</p>
+          <p className="text-xs text-gray-500 mb-2">
+            직접 입력 또는 아래 급 선택(예: 300·쿼터 → 약 255~440cc, 286·299·321 등 함께 검색)
+          </p>
           <div className="flex items-center gap-2 flex-wrap">
             <input
               type="number"
@@ -251,17 +279,17 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
             />
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            {CC_PRESETS.map((cc) => (
+            {CC_CLASS_PRESETS.map((preset, i) => (
               <button
-                key={cc}
+                key={`${preset.label}-${i}`}
                 type="button"
                 onClick={() => {
-                  setEngineCcMin(String(cc));
-                  setEngineCcMax(String(cc));
+                  setEngineCcMin(String(preset.min));
+                  setEngineCcMax(preset.max == null ? "" : String(preset.max));
                 }}
                 className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-orange-300 hover:bg-orange-50"
               >
-                {cc}cc
+                {preset.label}
               </button>
             ))}
           </div>
@@ -372,7 +400,7 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
             <DualRangeSlider
               min={0}
               max={PRICE_CAP}
-              step={50}
+              step={1000}
               low={priceMin}
               high={priceMax}
               fillClassName="bg-red-400"
@@ -384,9 +412,11 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
             />
             <div className="flex justify-between text-sm font-semibold text-gray-800 tabular-nums mt-1">
               <span>{priceMin.toLocaleString()}만원</span>
-              <span>{priceMax.toLocaleString()}만원</span>
+              <span>{priceMax >= PRICE_CAP ? "제한 없음" : `${priceMax.toLocaleString()}만원`}</span>
             </div>
-            <p className="text-xs text-gray-400 mt-1 text-right">슬라이더 단위: 만원</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">
+              슬라이더 단위: 1,000만원 · 맨 오른쪽 = 상한 없음 · 세밀한 구간은 직접 입력
+            </p>
           </div>
         </div>
 
@@ -485,21 +515,24 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
         <div className="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-black/40 p-4" role="dialog">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-xl">
             <h3 className="font-bold text-gray-900 text-[1.75rem] leading-tight mb-5">가격 직접 입력 (만원)</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              최대 칸을 비우면 상한 없음. 500,000만원(약 50억) 이상을 넣어도 상한 필터는 쓰지 않습니다.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <input
-                type="number"
+                type="text"
                 inputMode="numeric"
                 placeholder="최소"
-                value={priceMinIn}
-                onChange={(e) => setPriceMinIn(e.target.value)}
+                value={formatWithComma(priceMinIn)}
+                onChange={(e) => setPriceMinIn(e.target.value.replace(/[^\d]/g, ""))}
                 className="no-spinner w-full min-w-0 rounded-2xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
               <input
-                type="number"
+                type="text"
                 inputMode="numeric"
-                placeholder="최대"
-                value={priceMaxIn}
-                onChange={(e) => setPriceMaxIn(e.target.value)}
+                placeholder="최대 (비우면 제한 없음)"
+                value={formatWithComma(priceMaxIn)}
+                onChange={(e) => setPriceMaxIn(e.target.value.replace(/[^\d]/g, ""))}
                 className="no-spinner w-full min-w-0 rounded-2xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
