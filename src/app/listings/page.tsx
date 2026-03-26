@@ -1,8 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { ListingSearch } from "@/components/listings/ListingSearch";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { countFilteredListings, fetchFilteredListings, parseListingFilters } from "@/lib/listing-filters";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function ListingsPage({
 }) {
   const sp = toURLSearchParams(searchParams);
   const filters = parseListingFilters(sp);
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const [{ data: listings }, { count }] = await Promise.all([
     fetchFilteredListings(supabase, filters, { limit: 120 }),
     countFilteredListings(supabase, filters),
@@ -41,12 +42,20 @@ export default async function ListingsPage({
         <ListingSearch initialCount={initialCount} />
       </Suspense>
       <section className="max-w-6xl mx-auto px-4 py-6 pb-36 w-full">
-        <h2 className="text-base font-bold text-gray-900 mb-4">
-          검색 결과 <span className="text-orange-600">{listings.length}</span>건
-          {count != null && count > listings.length && (
-            <span className="text-sm font-normal text-gray-500"> (표시 최대 120건)</span>
-          )}
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-base font-bold text-gray-900">
+            검색 결과 <span className="text-orange-600">{listings.length}</span>건
+            {count != null && count > listings.length && (
+              <span className="text-sm font-normal text-gray-500"> (표시 최대 120건)</span>
+            )}
+          </h2>
+          <Link
+            href="/listings/new"
+            className="inline-flex items-center rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-orange-600"
+          >
+            매물 등록
+          </Link>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {listings.map((l) => (
             <ListingCard key={l.id} listing={l} />

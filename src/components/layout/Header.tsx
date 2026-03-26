@@ -20,6 +20,12 @@ export function Header() {
           <Link href="/listings" className="text-gray-600 hover:text-primary">
             매물
           </Link>
+          <Link
+            href={user ? "/listings/new" : "/auth/login?next=/listings/new"}
+            className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
+          >
+            매물 등록
+          </Link>
           {loading ? (
             <span className="text-gray-400 text-sm">로딩중...</span>
           ) : user ? (

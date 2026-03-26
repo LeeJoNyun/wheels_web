@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { BRANDS } from "@/types/database";
 import { DualRangeSlider } from "@/components/listings/DualRangeSlider";
-import { countFilteredListings, parseListingFilters, type ListingFilterParams } from "@/lib/listing-filters";
+import { parseListingFilters, type ListingFilterParams } from "@/lib/listing-filters";
 
 const CC_PRESETS = [125, 155, 250, 321, 400, 600, 1000] as const;
 
@@ -43,8 +42,6 @@ function segmentToCcInputs(segment: string | undefined): { min: string; max: str
 export function ListingSearch({ initialCount }: { initialCount: number }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = useMemo(() => createClient(), []);
-
   const [q, setQ] = useState("");
   const [engineCcMin, setEngineCcMin] = useState("");
   const [engineCcMax, setEngineCcMax] = useState("");
@@ -139,14 +136,20 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
   useEffect(() => {
     let cancelled = false;
     const t = setTimeout(async () => {
-      const { count: c } = await countFilteredListings(supabase, buildFilters());
-      if (!cancelled && c != null) setCount(c);
+      try {
+        const qs = paramsToQuery(buildFilters());
+        const res = await fetch(`/api/listings/count${qs ? `?${qs}` : ""}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!cancelled && typeof data?.count === "number") setCount(data.count);
+      } catch {
+        if (!cancelled) setCount(initialCount);
+      }
     }, 350);
     return () => {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [supabase, buildFilters]);
+  }, [buildFilters, initialCount]);
 
   const onSearch = () => {
     const qs = paramsToQuery(buildFilters());

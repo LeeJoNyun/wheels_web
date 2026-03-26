@@ -5,11 +5,9 @@ node_modules/
 .next/
 out/
 
-# local env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# env (.env* 전부 무시; 커밋할 예시만 예외)
+.env*
+!.env.example
 
 # logs
 *.log
