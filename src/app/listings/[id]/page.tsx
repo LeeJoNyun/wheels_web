@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { ChatButton } from "@/components/listings/ChatButton";
 import { ListingImageGallery } from "@/components/listings/ListingImageGallery";
+import { BackToPreviousNav } from "@/components/listings/BackToPreviousNav";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { safeReturnPath } from "@/lib/internal-path";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,13 @@ function timeAgo(iso: string | undefined) {
   return `${Math.floor(h / 24)}일 전`;
 }
 
-export default async function ListingDetailPage({ params }: { params: { id: string } }) {
+export default async function ListingDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("listings")
@@ -91,13 +98,21 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
     seller = sellerRow as { nickname: string | null; rating: number; trade_count: number };
   }
 
+  const rawReturn = searchParams.returnTo;
+  const returnToRaw = Array.isArray(rawReturn) ? rawReturn[0] : rawReturn;
+  const backHref = safeReturnPath(returnToRaw, "/listings");
+  const backVariant =
+    backHref === "/"
+      ? ("home" as const)
+      : backHref.startsWith("/listings")
+        ? ("search" as const)
+        : ("default" as const);
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <Link href="/listings" className="text-sm text-gray-500 hover:text-gray-700">
-          ← 목록으로
-        </Link>
+        <BackToPreviousNav href={backHref} variant={backVariant} />
 
         <section className="mt-3 grid gap-4 lg:grid-cols-[1.15fr_1fr]">
           <div className="space-y-3">

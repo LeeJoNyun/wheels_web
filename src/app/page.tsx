@@ -70,7 +70,7 @@ export default async function HomePage() {
       fromListings.push({
         id: `listing-${listing.id}`,
         imageUrl: url,
-        link: `/listings/${listing.id}`,
+        link: `/listings/${listing.id}?${new URLSearchParams({ returnTo: "/" }).toString()}`,
         linkText: "매물 보기",
         title: listing.bike ? `${listing.bike.brand} ${listing.bike.model}` : null,
         description: `${listing.price.toLocaleString()}원 · ${listing.mileage.toLocaleString()}km`,
@@ -133,7 +133,7 @@ export default async function HomePage() {
           {latestListings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {latestListings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
+                <ListingCard key={listing.id} listing={listing} returnPath="/" />
               ))}
             </div>
           ) : (

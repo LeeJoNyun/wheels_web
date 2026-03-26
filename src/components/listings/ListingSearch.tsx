@@ -63,7 +63,14 @@ function segmentToCcInputs(segment: string | undefined): { min: string; max: str
   }
 }
 
-export function ListingSearch({ initialCount }: { initialCount: number }) {
+export function ListingSearch({
+  initialCount,
+  resultsVisible = true,
+}: {
+  initialCount: number;
+  /** 서버에서 검색 실행 전이면 false — 안내 문구 표시 */
+  resultsVisible?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [q, setQ] = useState("");
@@ -177,7 +184,10 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
 
   const onSearch = () => {
     const qs = paramsToQuery(buildFilters());
-    router.push(qs ? `/listings?${qs}` : "/listings");
+    const u = new URLSearchParams(qs);
+    u.set("run", "1");
+    const s = u.toString();
+    router.push(`/listings?${s}`);
   };
 
   const onReset = () => {
@@ -233,7 +243,12 @@ export function ListingSearch({ initialCount }: { initialCount: number }) {
   return (
     <div className="bg-white border-b border-gray-200">
       <div className="max-w-3xl mx-auto px-4 pt-4 pb-28 md:pb-8">
-        <h1 className="text-center text-lg font-bold text-gray-900 mb-3">매물 검색</h1>
+        <h1 className="text-center text-lg font-bold text-gray-900 mb-2">매물 검색</h1>
+        {!resultsVisible ? (
+          <p className="text-center text-xs text-gray-500 mb-3">
+            조건을 맞춘 뒤 아래 <strong className="text-gray-700">검색</strong>을 눌러 목록을 불러옵니다.
+          </p>
+        ) : null}
 
         <div className="relative mb-4">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>

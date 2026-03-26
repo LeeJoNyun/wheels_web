@@ -7,14 +7,21 @@ import type { FilteredListingRow } from "@/lib/listing-filters";
 
 interface ListingCardProps {
   listing: FilteredListingRow;
+  /** 상세에서 «목록으로» 복귀 경로 (예: `/`, `/listings?run=1&brand=…`) */
+  returnPath?: string;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, returnPath }: ListingCardProps) {
   const imageUrl = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const bike = listing.bike;
 
+  const href =
+    returnPath != null && returnPath !== ""
+      ? `/listings/${listing.id}?${new URLSearchParams({ returnTo: returnPath }).toString()}`
+      : `/listings/${listing.id}`;
+
   return (
-    <Link href={`/listings/${listing.id}`}>
+    <Link href={href}>
       <article className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-shadow">
         <div className="aspect-video bg-gray-200 relative">
           {imageUrl ? (
