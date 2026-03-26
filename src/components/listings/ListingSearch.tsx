@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BRANDS } from "@/types/database";
 import { DualRangeSlider } from "@/components/listings/DualRangeSlider";
@@ -94,6 +94,34 @@ export function ListingSearch({
   const [mileageMaxIn, setMileageMaxIn] = useState("");
   const [priceMinIn, setPriceMinIn] = useState("");
   const [priceMaxIn, setPriceMaxIn] = useState("");
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+
+  const detailFilterCount = useMemo(() => {
+    let n = 0;
+    if (engineCcMin.trim() || engineCcMax.trim()) n++;
+    if (brand) n++;
+    if (model.trim()) n++;
+    if (yearMin > 1990 || yearMax < yNow) n++;
+    if (mileageMin > 0 || mileageMax < MILEAGE_CAP) n++;
+    if (priceMin > 0 || priceMax < PRICE_CAP) n++;
+    if (accident) n++;
+    if (tuning) n++;
+    return n;
+  }, [
+    engineCcMin,
+    engineCcMax,
+    brand,
+    model,
+    yearMin,
+    yearMax,
+    yNow,
+    mileageMin,
+    mileageMax,
+    priceMin,
+    priceMax,
+    accident,
+    tuning,
+  ]);
 
   const syncFromUrl = useCallback(() => {
     const p = readParamsFromUrl(searchParams);
@@ -130,6 +158,15 @@ export function ListingSearch({
   useEffect(() => {
     syncFromUrl();
   }, [syncFromUrl]);
+
+  useEffect(() => {
+    if (!filterPanelOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [filterPanelOpen]);
 
   const buildFilters = useCallback((): ListingFilterParams => {
     const f: ListingFilterParams = {};
@@ -183,6 +220,7 @@ export function ListingSearch({
   }, [buildFilters, initialCount]);
 
   const onSearch = () => {
+    setFilterPanelOpen(false);
     const qs = paramsToQuery(buildFilters());
     const u = new URLSearchParams(qs);
     u.set("run", "1");
@@ -191,6 +229,7 @@ export function ListingSearch({
   };
 
   const onReset = () => {
+    setFilterPanelOpen(false);
     setQ("");
     setEngineCcMin("");
     setEngineCcMax("");
@@ -240,32 +279,9 @@ export function ListingSearch({
     setShowPriceInput(false);
   };
 
-  return (
-    <div className="bg-white border-b border-gray-200">
-      <div className="max-w-3xl mx-auto px-4 pt-4 pb-28 md:pb-8">
-        <h1 className="text-center text-lg font-bold text-gray-900 mb-2">매물 검색</h1>
-        {!resultsVisible ? (
-          <p className="text-center text-xs text-gray-500 mb-3">
-            조건을 맞춘 뒤 아래 <strong className="text-gray-700">검색</strong>을 눌러 목록을 불러옵니다.
-          </p>
-        ) : null}
-
-        <div className="relative mb-4">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="예: 닌자 400 찾으세요?"
-            className="w-full rounded-full border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200"
-          />
-        </div>
-
-        <div className="border-t border-gray-100 pt-3 pb-2">
+  const filterPanelContent = (
+    <>
+        <div className="border-t border-gray-100 pt-3 pb-2 first:border-t-0 first:pt-0">
           <p className="text-[15px] font-medium text-gray-800 mb-2">배기량 (cc)</p>
           <p className="text-xs text-gray-500 mb-2">
             직접 입력 또는 아래 급 선택(예: 300·쿼터 → 약 255~440cc, 286·299·321 등 함께 검색)
@@ -462,11 +478,100 @@ export function ListingSearch({
           </div>
           <StaticRow label="연료 / 변속" hint="바이크 기준 준비 중" />
         </div>
+    </>
+  );
+
+  return (
+    <div className="bg-white border-b border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 pt-3 pb-24 md:pb-6">
+        <h1 className="sr-only">매물 검색</h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-3">
+          <div className="relative flex-1 min-w-0">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="예: 닌자 400 찾으세요?"
+              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setFilterPanelOpen(true)}
+            className="shrink-0 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-800 hover:border-orange-300 hover:bg-orange-50 sm:min-w-[9.5rem]"
+          >
+            검색 조건
+            {detailFilterCount > 0 ? (
+              <span className="ml-1.5 rounded-full bg-orange-500 px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                {detailFilterCount}
+              </span>
+            ) : null}
+          </button>
+        </div>
+        {!resultsVisible ? (
+          <p className="text-center text-xs text-gray-500 mt-3">
+            키워드만 쓰거나 <strong className="text-gray-700">검색 조건</strong>에서 세부 필터를 고른 뒤 하단{" "}
+            <strong className="text-gray-700">검색</strong>을 눌러 목록을 불러옵니다.
+          </p>
+        ) : (
+          <p className="text-xs text-gray-500 mt-2.5 text-center sm:text-left">
+            검색 결과는 아래 목록에서 확인하세요. 배기량·가격 등 세부 설정은{" "}
+            <span className="font-medium text-gray-700">검색 조건</span>을 눌러 별도 패널에서만 펼쳐집니다.
+          </p>
+        )}
       </div>
 
-      {/* sticky footer */}
+      {filterPanelOpen ? (
+        <div
+          className="fixed inset-0 z-40 flex flex-col sm:items-center sm:justify-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="listing-filter-panel-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45 sm:bg-black/40"
+            aria-label="검색 조건 닫기"
+            onClick={() => setFilterPanelOpen(false)}
+          />
+          <div className="relative z-10 mt-auto flex max-h-[min(92vh,720px)] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:mt-0 sm:max-h-[85vh] sm:max-w-lg sm:rounded-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3">
+              <h2 id="listing-filter-panel-title" className="text-lg font-bold text-gray-900">
+                검색 조건
+              </h2>
+              <button
+                type="button"
+                onClick={() => setFilterPanelOpen(false)}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                aria-label="닫기"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-2">{filterPanelContent}</div>
+            <div className="shrink-0 border-t border-gray-100 px-4 py-3 safe-area-pb">
+              <button
+                type="button"
+                onClick={() => setFilterPanelOpen(false)}
+                className="w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+              >
+                조건 설정 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* sticky footer — 검색 결과 영역과 분리된 고정 액션 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 bg-white/95 backdrop-blur px-4 py-3 safe-area-pb">
-        <div className="max-w-3xl mx-auto flex gap-3">
+        <div className="max-w-6xl mx-auto flex gap-3">
           <button
             type="button"
             onClick={onReset}
@@ -485,7 +590,7 @@ export function ListingSearch({
       </div>
 
       {showMileageInput && (
-        <div className="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-black/40 p-4" role="dialog">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="dialog">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-xl">
             <h3 className="font-bold text-gray-900 text-[1.75rem] leading-tight mb-5">주행거리 직접 입력 (km)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
@@ -527,7 +632,7 @@ export function ListingSearch({
       )}
 
       {showPriceInput && (
-        <div className="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-black/40 p-4" role="dialog">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" role="dialog">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-xl">
             <h3 className="font-bold text-gray-900 text-[1.75rem] leading-tight mb-5">가격 직접 입력 (만원)</h3>
             <p className="text-sm text-gray-500 mb-4">

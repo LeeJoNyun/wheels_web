@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { ListingSearch } from "@/components/listings/ListingSearch";
-import { ListingCard } from "@/components/listings/ListingCard";
+import { ListingListRow } from "@/components/listings/ListingListRow";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   countFilteredListings,
@@ -88,11 +88,13 @@ export default async function ListingsPage({
                 매물 등록
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ul className="flex flex-col gap-2 sm:gap-3">
               {listings.map((l) => (
-                <ListingCard key={l.id} listing={l} returnPath={listReturnPath} />
+                <li key={l.id}>
+                  <ListingListRow listing={l} returnPath={listReturnPath} />
+                </li>
               ))}
-            </div>
+            </ul>
             {listings.length === 0 && (
               <p className="text-center text-gray-500 py-16 bg-white rounded-xl border">조건에 맞는 매물이 없습니다.</p>
             )}
