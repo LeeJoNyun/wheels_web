@@ -5,12 +5,29 @@ import Image from "next/image";
 
 import type { FilteredListingRow } from "@/lib/listing-filters";
 
+function listingStatusLabel(status: string) {
+  switch (status) {
+    case "active":
+      return "판매중";
+    case "sold":
+      return "거래완료";
+    case "reserved":
+      return "예약중";
+    case "hidden":
+      return "숨김";
+    default:
+      return status;
+  }
+}
+
 interface ListingListRowProps {
   listing: FilteredListingRow;
   returnPath?: string;
+  /** 판매자 화면에서 거래 상태 배지 */
+  showStatus?: boolean;
 }
 
-export function ListingListRow({ listing, returnPath }: ListingListRowProps) {
+export function ListingListRow({ listing, returnPath, showStatus }: ListingListRowProps) {
   const imageUrl = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const bike = listing.bike;
 
@@ -21,7 +38,7 @@ export function ListingListRow({ listing, returnPath }: ListingListRowProps) {
 
   return (
     <Link href={href} className="block">
-      <article className="flex gap-3 sm:gap-4 rounded-xl border border-gray-200 bg-white p-3 sm:p-4 transition-shadow hover:border-orange-200 hover:shadow-md">
+      <article className="flex gap-3 sm:gap-4 rounded-xl border border-gray-200 bg-white p-3 sm:p-4 transition-shadow hover:border-brand/25 hover:shadow-md">
         <div className="relative h-[4.5rem] w-[6.5rem] shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:h-[5.5rem] sm:w-[7.75rem]">
           {imageUrl ? (
             <Image
@@ -37,9 +54,16 @@ export function ListingListRow({ listing, returnPath }: ListingListRowProps) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900 sm:text-base">
-            {bike ? `${bike.brand} ${bike.model}` : "-"} {bike ? `(${bike.year}년)` : ""}
-          </h3>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="line-clamp-2 min-w-0 text-[15px] font-semibold leading-snug text-ink sm:text-base">
+              {bike ? `${bike.brand} ${bike.model}` : "-"} {bike ? `(${bike.year}년)` : ""}
+            </h3>
+            {showStatus ? (
+              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                {listingStatusLabel(listing.status)}
+              </span>
+            ) : null}
+          </div>
           <p className="text-sm text-gray-500">
             {bike?.engine_cc != null ? `${bike.engine_cc.toLocaleString()}cc` : "-"} ·{" "}
             {listing.mileage.toLocaleString()}km

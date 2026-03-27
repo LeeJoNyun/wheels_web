@@ -119,7 +119,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-xl shadow-gray-200/50">
           <Link
@@ -180,7 +180,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><p className="text-gray-500">로딩 중...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-surface"><p className="text-gray-500">로딩 중...</p></div>}>
       <LoginForm />
     </Suspense>
   );

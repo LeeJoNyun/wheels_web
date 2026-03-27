@@ -39,7 +39,7 @@ export function ListingCard({ listing, returnPath }: ListingCardProps) {
           )}
         </div>
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900">
+          <h3 className="font-semibold text-ink">
             {bike ? `${bike.brand} ${bike.model}` : "-"} ({bike?.year}년)
           </h3>
           <p className="text-sm text-gray-500 mt-0.5">

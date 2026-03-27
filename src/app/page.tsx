@@ -82,7 +82,7 @@ export default async function HomePage() {
   const emptyBanner = (
     <div className="rounded-2xl overflow-hidden border bg-white max-w-6xl mx-auto">
       <div className="flex flex-col items-center justify-center min-h-[280px] sm:min-h-[360px] px-4 py-16 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">BikeMarket</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-ink">BikeMarket</h1>
         <p className="mt-2 text-gray-600 max-w-md">오토바이 중고거래 — 조건에 맞는 매물을 찾아보세요.</p>
       </div>
     </div>
@@ -94,7 +94,7 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
       <main className="flex-1">
         {showDeployHint ? (
@@ -125,8 +125,8 @@ export default async function HomePage() {
 
         <section className="max-w-6xl mx-auto px-4 pt-8 pb-16">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">최신 등록 매물</h2>
-            <Link href="/listings" className="text-sm font-semibold text-orange-600 hover:text-orange-700">
+            <h2 className="text-lg font-bold text-ink">최신 등록 매물</h2>
+            <Link href="/listings" className="text-sm font-semibold text-brand hover:text-brand-dark">
               전체 보기
             </Link>
           </div>
@@ -144,7 +144,7 @@ export default async function HomePage() {
           <div className="mt-8 flex justify-center">
             <Link
               href="/listings"
-              className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-8 py-3.5 text-base font-bold text-white shadow-sm hover:bg-orange-600 transition"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-button px-8 py-3.5 text-base font-bold text-white shadow-sm hover:bg-brand-button-hover transition"
             >
               매물 검색하기
             </Link>

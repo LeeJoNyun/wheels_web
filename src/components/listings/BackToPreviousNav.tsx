@@ -20,7 +20,7 @@ export function BackToPreviousNav({ href, variant }: Props) {
   return (
     <Link
       href={href}
-      className="group inline-flex items-center rounded-lg py-1.5 pr-2 text-sm font-medium text-gray-600 transition-colors hover:text-orange-600"
+      className="group inline-flex items-center rounded-lg py-1.5 pr-2 text-sm font-medium text-gray-600 transition-colors hover:text-brand"
     >
       <span className="tabular-nums">
         <span className="listing-back-arrow inline-block transition-transform duration-200 group-hover:-translate-x-0.5">

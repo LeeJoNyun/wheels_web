@@ -5,13 +5,13 @@ import { Header } from "@/components/layout/Header";
 
 export function ChatPageContent({ listingId }: { listingId: string | null }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-lg">
         {!listingId ? (
           <div className="rounded-xl border bg-white p-6 text-center">
             <p className="text-gray-600">채팅할 매물이 지정되지 않았습니다.</p>
-            <Link href="/listings" className="mt-4 inline-block text-primary font-medium hover:underline">
+            <Link href="/listings" className="mt-4 inline-block text-brand font-medium hover:underline">
               매물 목록으로
             </Link>
           </div>

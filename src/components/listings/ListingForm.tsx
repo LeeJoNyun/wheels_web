@@ -461,7 +461,7 @@ export function ListingForm() {
         <button
           type="submit"
           disabled={submitting || uploading}
-          className="w-full rounded-xl bg-orange-500 px-5 py-3.5 text-lg font-bold text-white hover:bg-orange-600 disabled:opacity-60"
+          className="w-full rounded-lg bg-brand-button px-5 py-3.5 text-lg font-bold text-white hover:bg-brand-button-hover disabled:opacity-60"
         >
           {submitting ? "등록 중..." : "작성 완료"}
         </button>

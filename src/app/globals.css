@@ -3,14 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --primary: #e63946;
-  --primary-dark: #c1121f;
-  --secondary: #457b9d;
-  --secondary-dark: #1d3557;
+  --primary: #ff8a00;
+  --primary-dark: #e57400;
+  --secondary: #2d3436;
+  --secondary-dark: #1e2123;
+  --brand-button: #ff7a00;
+  --brand-charcoal: #2d3436;
+  --surface: #f9fafb;
+  --ink: #333333;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-surface text-ink antialiased;
 }
 
 .safe-area-pb {

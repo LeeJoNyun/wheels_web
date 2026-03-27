@@ -318,7 +318,7 @@ export function ListingSearch({
                   setEngineCcMin(String(preset.min));
                   setEngineCcMax(preset.max == null ? "" : String(preset.max));
                 }}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-orange-300 hover:bg-orange-50"
+                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-700 hover:border-brand/35 hover:bg-brand/5"
               >
                 {preset.label}
               </button>
@@ -356,7 +356,7 @@ export function ListingSearch({
           <div className="py-3">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-2">
               <span className="text-[15px] font-medium text-gray-800">연식</span>
-              <span className="text-xl font-bold text-orange-600 tabular-nums tracking-tight">{yearCenterLabel}</span>
+              <span className="text-xl font-bold text-brand tabular-nums tracking-tight">{yearCenterLabel}</span>
             </div>
             <DualRangeSlider
               min={1990}
@@ -389,7 +389,7 @@ export function ListingSearch({
                   setMileageMaxIn(mileageMax < MILEAGE_CAP ? String(mileageMax) : "");
                   setShowMileageInput(true);
                 }}
-                className="text-sm text-orange-600 font-medium shrink-0"
+                className="text-sm text-brand font-medium shrink-0"
               >
                 직접 입력
               </button>
@@ -423,7 +423,7 @@ export function ListingSearch({
                   setPriceMaxIn(priceMax < PRICE_CAP ? String(priceMax) : "");
                   setShowPriceInput(true);
                 }}
-                className="text-sm text-orange-600 font-medium"
+                className="text-sm text-brand font-medium"
               >
                 직접 입력
               </button>
@@ -497,17 +497,17 @@ export function ListingSearch({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="예: 닌자 400 찾으세요?"
-              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200"
+              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
           </div>
           <button
             type="button"
             onClick={() => setFilterPanelOpen(true)}
-            className="shrink-0 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-800 hover:border-orange-300 hover:bg-orange-50 sm:min-w-[9.5rem]"
+            className="shrink-0 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-semibold text-gray-800 hover:border-brand/35 hover:bg-brand/5 sm:min-w-[9.5rem]"
           >
             검색 조건
             {detailFilterCount > 0 ? (
-              <span className="ml-1.5 rounded-full bg-orange-500 px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
+              <span className="ml-1.5 rounded-full bg-brand-button px-1.5 py-0.5 text-xs font-bold text-white tabular-nums">
                 {detailFilterCount}
               </span>
             ) : null}
@@ -582,7 +582,7 @@ export function ListingSearch({
           <button
             type="button"
             onClick={onSearch}
-            className="flex-[1.4] rounded-xl bg-orange-500 py-3.5 text-sm font-bold text-white shadow-sm hover:bg-orange-600 active:scale-[0.99] transition"
+            className="flex-[1.4] rounded-lg bg-brand-button py-3.5 text-sm font-bold text-white shadow-sm hover:bg-brand-button-hover active:scale-[0.99] transition"
           >
             검색 ({count.toLocaleString()}대)
           </button>
@@ -622,7 +622,7 @@ export function ListingSearch({
               <button
                 type="button"
                 onClick={applyMileageDirect}
-                className="h-14 rounded-2xl bg-orange-500 text-white text-2xl font-medium"
+                className="h-14 rounded-lg bg-brand-button text-white text-2xl font-medium hover:bg-brand-button-hover"
               >
                 적용
               </button>
@@ -667,7 +667,7 @@ export function ListingSearch({
               <button
                 type="button"
                 onClick={applyPriceDirect}
-                className="h-14 rounded-2xl bg-orange-500 text-white text-2xl font-medium"
+                className="h-14 rounded-lg bg-brand-button text-white text-2xl font-medium hover:bg-brand-button-hover"
               >
                 적용
               </button>

@@ -225,3 +225,59 @@ export async function countFilteredListings(supabase: SupabaseClient, params: Li
   const n = normalized.filter((row) => rowMatches(row, params, engineBounds)).length;
   return { count: n, error: null };
 }
+
+/** 내 매물 목록 (모든 상태, 본인 user_id) */
+export async function fetchMyListings(supabase: SupabaseClient, userId: string) {
+  const { data: rows, error } = await supabase
+    .from("listings")
+    .select(
+      `
+      id,
+      price,
+      mileage,
+      status,
+      accident,
+      tuning,
+      description,
+      created_at,
+      bike:bikes ( brand, model, year, engine_cc ),
+      listing_images ( url, sort_order )
+    `
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    return { data: [] as FilteredListingRow[], error };
+  }
+  const normalized = (rows ?? []).map(normalizeListingRow).filter((r): r is Row => r != null);
+  return { data: normalized, error: null };
+}
+
+/** 내 매물 상태별 건수 (마이페이지 활동 요약) */
+export async function getMyListingCounts(supabase: SupabaseClient, userId: string) {
+  const countStatus = async (status: string) => {
+    const { count, error } = await supabase
+      .from("listings")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", status);
+    if (error) return { n: 0, error };
+    return { n: count ?? 0, error: null };
+  };
+
+  const [active, sold, reserved] = await Promise.all([
+    countStatus("active"),
+    countStatus("sold"),
+    countStatus("reserved"),
+  ]);
+
+  const err = active.error ?? sold.error ?? reserved.error;
+  return {
+    active: active.n,
+    sold: sold.n,
+    reserved: reserved.n,
+    error: err,
+  };
+}

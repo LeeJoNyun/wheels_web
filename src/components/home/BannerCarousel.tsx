@@ -90,7 +90,7 @@ export function BannerCarousel({ slides, emptyFallback }: Props) {
                   {slide.link && (
                     <Link
                       href={slide.link}
-                      className="mt-4 inline-flex rounded-lg bg-white px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-100"
+                      className="mt-4 inline-flex rounded-lg bg-white px-4 py-2 text-sm font-bold text-ink hover:bg-gray-100"
                     >
                       {slide.linkText || "자세히 보기"}
                     </Link>

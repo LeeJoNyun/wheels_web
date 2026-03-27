@@ -34,7 +34,7 @@ export function ListingImageGallery({ images }: { images: Img[] }) {
               type="button"
               onClick={() => setSelected(idx)}
               className={`relative aspect-video overflow-hidden rounded-md border ${
-                idx === selected ? "ring-2 ring-orange-500 border-orange-500" : "border-gray-200"
+                idx === selected ? "ring-2 ring-brand border-brand" : "border-gray-200"
               }`}
             >
               <Image src={img.url} alt={`썸네일 ${idx + 1}`} fill className="object-cover" sizes="120px" />

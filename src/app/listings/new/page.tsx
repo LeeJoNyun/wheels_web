@@ -10,10 +10,10 @@ export default async function NewListingPage() {
     redirect("/auth/login?next=/listings/new");
   }
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-6 max-w-2xl">
-        <h1 className="text-2xl font-bold text-secondary-dark mb-6">매물 등록</h1>
+        <h1 className="text-2xl font-bold text-brand-charcoal mb-6">매물 등록</h1>
         <ListingForm />
       </main>
     </div>

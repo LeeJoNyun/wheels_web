@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { ChatButton } from "@/components/listings/ChatButton";
 import { ListingImageGallery } from "@/components/listings/ListingImageGallery";
 import { BackToPreviousNav } from "@/components/listings/BackToPreviousNav";
+import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { safeReturnPath } from "@/lib/internal-path";
 
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 type ListingRow = {
   id: string;
   user_id: string;
+  status: string;
   price: number;
   mileage: number;
   accident: boolean;
@@ -52,6 +54,11 @@ export default async function ListingDetailPage({
   params: { id: string };
   searchParams: Record<string, string | string[] | undefined>;
 }) {
+  const supabaseUser = await createClient();
+  const {
+    data: { user: sessionUser },
+  } = await supabaseUser.auth.getUser();
+
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("listings")
@@ -79,12 +86,15 @@ export default async function ListingDetailPage({
     `
     )
     .eq("id", params.id)
-    .eq("status", "active")
     .maybeSingle();
 
   if (error || !data) notFound();
 
   const listing = data as unknown as ListingRow;
+  const isOwner = sessionUser?.id === listing.user_id;
+  if (listing.status !== "active" && !isOwner) {
+    notFound();
+  }
   const bike = firstOf(listing.bike);
   const images = (listing.listing_images ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const consumables = firstOf(listing.listing_consumables);
@@ -109,10 +119,30 @@ export default async function ListingDetailPage({
         : ("default" as const);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-surface">
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6">
         <BackToPreviousNav href={backHref} variant={backVariant} />
+
+        {listing.status !== "active" && isOwner ? (
+          <div
+            className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            role="status"
+          >
+            <p className="font-semibold">판매자 전용 보기</p>
+            <p className="mt-1 text-amber-900/90">
+              이 매물은 일반 검색에 노출되지 않습니다. (상태:{" "}
+              {listing.status === "sold"
+                ? "거래완료"
+                : listing.status === "reserved"
+                  ? "예약중"
+                  : listing.status === "hidden"
+                    ? "숨김"
+                    : listing.status}
+              )
+            </p>
+          </div>
+        ) : null}
 
         <section className="mt-3 grid gap-4 lg:grid-cols-[1.15fr_1fr]">
           <div className="space-y-3">
