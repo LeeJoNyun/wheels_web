@@ -49,6 +49,24 @@ function timeAgo(iso: string | undefined) {
   return `${Math.floor(h / 24)}일 전`;
 }
 
+function formatReadableDescription(raw: string | null | undefined) {
+  if (!raw) return "등록된 설명이 없습니다.";
+  const normalized = raw.replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+  const out: string[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    out.push(line);
+    if (/^\d+\.\s/.test(line.trim())) {
+      const next = lines[i + 1]?.trim() ?? "";
+      if (next !== "") out.push("");
+    }
+  }
+
+  return out.join("\n");
+}
+
 export default async function ListingDetailPage({
   params,
   searchParams,
@@ -207,7 +225,7 @@ export default async function ListingDetailPage({
 
         <section className="mt-4 rounded-xl border bg-white p-5">
           <h2 className="font-semibold text-gray-900 mb-2">상세 설명</h2>
-          <p className="text-gray-700 whitespace-pre-wrap">{listing.description || "등록된 설명이 없습니다."}</p>
+          <p className="text-gray-700 whitespace-pre-wrap">{formatReadableDescription(listing.description)}</p>
           {listing.maintenance_history && (
             <>
               <h3 className="font-semibold text-gray-900 mt-5 mb-2">정비 이력</h3>

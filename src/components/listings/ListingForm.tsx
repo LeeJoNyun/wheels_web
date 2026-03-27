@@ -205,20 +205,19 @@ export function ListingForm() {
     ].join(", ");
 
     const cafeBlock = [
-      "카페 등록 양식",
       `1. 판매 지역: ${form.region.trim() || "-"}`,
       `2. 제작사/모델명: ${`${form.brand.trim()} ${form.model.trim()}`.trim() || "-"}`,
       `3. 제작연식: ${year || "-"}`,
       `4. 적산거리: ${mileage ? `${mileage.toLocaleString()}km` : "-"}`,
       `5. 사고/슬립 여부: 사고 ${form.accident ? "있음" : "없음"} / 슬립 ${form.slip ? "있음" : "없음"}`,
-      `   상품 설명: ${form.product_description.trim() || "-"}`,
-      `   몇번째 차주: ${form.owner_count.trim() || "-"}`,
-      `   특이사항: ${form.special_notes.trim() || "-"}`,
-      `   기타: ${form.other_notes.trim() || "-"}`,
-      `   튜닝 내역: ${tuningText || "없음"}`,
+      `5-1. 상품 설명: ${form.product_description.trim() || "-"}`,
+      `5-2. 몇번째 차주: ${form.owner_count.trim() || "-"}`,
+      `5-3. 특이사항: ${form.special_notes.trim() || "-"}`,
+      `5-4. 기타: ${form.other_notes.trim() || "-"}`,
+      `5-5. 튜닝 내역: ${tuningText || "없음"}`,
       `6. 판매 희망가격: ${priceManwon ? `${priceManwon.toLocaleString()}만원` : "-"}`,
       `7. 흥정 가능 여부: ${form.negotiable}`,
-      form.trade_options.trim() ? `   추가 옵션: ${form.trade_options.trim()}` : "",
+      form.trade_options.trim() ? `7-1. 추가 옵션: ${form.trade_options.trim()}` : "",
       "",
     ]
       .filter(Boolean)
@@ -436,19 +435,22 @@ export function ListingForm() {
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">모델명 *</span>
-          <select
-            className="w-full rounded-xl border px-3 py-3"
-            value={form.model}
-            onChange={(e) => setField("model", e.target.value)}
-            disabled={!form.brand}
-          >
-            <option value="">{form.brand ? "모델 선택" : "먼저 제조사를 선택하세요"}</option>
-            {modelOptions.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              className="w-full appearance-none rounded-xl border px-3 py-3 pr-10"
+              value={form.model}
+              onChange={(e) => setField("model", e.target.value)}
+              disabled={!form.brand}
+            >
+              <option value="">{form.brand ? "모델 선택" : "먼저 제조사를 선택하세요"}</option>
+              {modelOptions.map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          </div>
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">연식 *</span>
@@ -527,6 +529,15 @@ export function ListingForm() {
             placeholder="차량 상태를 핵심 위주로 작성해 주세요. (예: 외관 상태, 주요 정비 상태)"
             value={form.product_description}
             onChange={(e) => setField("product_description", e.target.value)}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block font-semibold">정비 이력</span>
+          <textarea
+            rows={3}
+            className="w-full rounded-xl border px-3 py-3"
+            value={form.maintenance_history}
+            onChange={(e) => setField("maintenance_history", e.target.value)}
           />
         </label>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -620,10 +631,6 @@ export function ListingForm() {
         </label>
       </section>
 
-      <label className="block text-sm">
-        <span className="mb-1 block font-semibold">정비 이력</span>
-        <textarea rows={3} className="w-full rounded-xl border px-3 py-3" value={form.maintenance_history} onChange={(e) => setField("maintenance_history", e.target.value)} />
-      </label>
       <label className="block text-sm">
         <span className="mb-1 block font-semibold">판매 이유</span>
         <textarea rows={2} className="w-full rounded-xl border px-3 py-3" value={form.sell_reason} onChange={(e) => setField("sell_reason", e.target.value)} />
