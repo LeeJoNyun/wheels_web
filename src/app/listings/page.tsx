@@ -67,7 +67,11 @@ export default async function ListingsPage({
       >
         <ListingSearch initialCount={initialCount} resultsVisible={showResults} />
       </Suspense>
-      <section className="max-w-6xl mx-auto px-4 py-6 pb-36 w-full">
+      <section className="max-w-7xl mx-auto px-4 py-6 pb-36 w-full">
+        <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+          <h1 className="text-xl font-bold text-ink">중고 바이크 매물</h1>
+          <p className="mt-1 text-sm text-gray-600">조건을 조합해 원하는 매물을 빠르게 찾아보세요.</p>
+        </div>
         {!showResults ? (
           <p className="text-center text-gray-600 py-14 px-4 bg-white rounded-xl border text-[15px] leading-relaxed">
             조건을 설정한 뒤 하단 <strong className="text-ink">검색</strong>을 누르면 결과 목록이 표시됩니다.
@@ -75,7 +79,7 @@ export default async function ListingsPage({
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-base font-bold text-ink">
+              <h2 className="text-base font-bold text-ink sm:text-lg">
                 검색 결과 <span className="text-brand">{listings.length}</span>건
                 {count != null && count > listings.length && (
                   <span className="text-sm font-normal text-gray-500"> (표시 최대 120건)</span>

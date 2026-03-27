@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { BannerCarousel, type BannerSlide } from "@/components/home/BannerCarousel";
@@ -123,21 +124,50 @@ export default async function HomePage() {
           <BannerCarousel slides={bannerSlides} emptyFallback={emptyBanner} />
         </section>
 
-        <section className="max-w-6xl mx-auto px-4 pt-8 pb-16">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-ink">최신 등록 매물</h2>
-            <Link href="/listings" className="text-sm font-semibold text-brand hover:text-brand-dark">
-              전체 보기
+        <section className="max-w-7xl mx-auto px-4 pt-7 pb-16">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 font-semibold text-brand-charcoal">
+                <ShieldCheck className="h-4 w-4" aria-hidden />
+                검증 매물 중심
+              </span>
+              <Link href="/listings?segment=mid&run=1" className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700 hover:bg-gray-200">
+                입문형
+              </Link>
+              <Link href="/listings?segment=sport&run=1" className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700 hover:bg-gray-200">
+                스포츠
+              </Link>
+              <Link href="/listings?segment=liter&run=1" className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700 hover:bg-gray-200">
+                리터급
+              </Link>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-ink sm:text-2xl">실매물 기반 중고 바이크</h2>
+                <p className="mt-1 text-sm text-gray-600">가격·주행거리·배기량을 바로 비교해 보고 문의까지 이어가세요.</p>
+              </div>
+              <Link href="/listings" className="hidden items-center gap-1 text-sm font-semibold text-brand hover:text-brand-dark sm:inline-flex">
+                전체 보기
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-ink">최신 등록 매물</h3>
+            <Link href="/listings" className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-dark sm:hidden">
+              더보기
+              <ChevronRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
           {latestListings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {latestListings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} returnPath="/" />
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border bg-white py-16 text-center text-gray-500">
+            <div className="mt-4 rounded-xl border bg-white py-16 text-center text-gray-500">
               아직 등록된 매물이 없습니다.
             </div>
           )}
