@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, ShieldCheck } from "lucide-react";
+import { unstable_noStore as noStore } from "next/cache";
 import { Header } from "@/components/layout/Header";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { BannerCarousel, type BannerSlide } from "@/components/home/BannerCarousel";
@@ -8,8 +9,11 @@ import { fetchFilteredListings } from "@/lib/listing-filters";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export default async function HomePage() {
+  noStore();
   let supabase: SupabaseClient | null = null;
   let configError: string | null = null;
   try {

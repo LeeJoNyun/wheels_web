@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { Header } from "@/components/layout/Header";
 import { ListingSearch } from "@/components/listings/ListingSearch";
 import { ListingListRow } from "@/components/listings/ListingListRow";
@@ -13,6 +14,8 @@ import {
 } from "@/lib/listing-filters";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 function toURLSearchParams(searchParams: Record<string, string | string[] | undefined>): URLSearchParams {
   const sp = new URLSearchParams();
@@ -42,6 +45,7 @@ export default async function ListingsPage({
 }: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
+  noStore();
   const sp = toURLSearchParams(searchParams);
   const showResults = shouldShowListingResults(sp);
   const filters = parseListingFilters(sp);
