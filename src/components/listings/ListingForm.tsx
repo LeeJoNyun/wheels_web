@@ -224,7 +224,7 @@ export function ListingForm() {
       setMsg("매물이 등록되었습니다.");
       setForm(INITIAL);
       setImages([]);
-      router.push("/listings");
+      router.push("/listings?run=1");
       router.refresh();
     } catch (err: any) {
       setMsg(err?.message || "매물 등록에 실패했습니다.");

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { ListingListRow } from "@/components/listings/ListingListRow";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { fetchMyListings } from "@/lib/listing-filters";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,8 @@ export default async function MyListingsPage() {
     redirect("/auth/login?next=/my/listings");
   }
 
-  const { data: listings, error } = await fetchMyListings(supabase, user.id);
+  const admin = createServiceRoleClient();
+  const { data: listings, error } = await fetchMyListings(admin, user.id);
   const listReturnPath = "/my/listings";
 
   return (

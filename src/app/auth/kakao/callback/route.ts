@@ -16,6 +16,14 @@ type KakaoTokenResponse = {
   error_description?: string;
 };
 
+type KakaoMeResponse = {
+  properties?: {
+    nickname?: string;
+    profile_image?: string;
+    thumbnail_image?: string;
+  };
+};
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const origin = url.origin;
@@ -113,6 +121,33 @@ export async function GET(request: Request) {
     );
     errRes.cookies.delete(STATE_COOKIE);
     return errRes;
+  }
+
+  if (tokens.access_token) {
+    try {
+      const meRes = await fetch("https://kapi.kakao.com/v2/user/me", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      const meJson = (await meRes.json()) as KakaoMeResponse;
+      const avatar =
+        meJson.properties?.profile_image ?? meJson.properties?.thumbnail_image ?? null;
+      const displayName = meJson.properties?.nickname ?? null;
+      if (avatar || displayName) {
+        const { error: updateErr } = await supabase.auth.updateUser({
+          data: {
+            ...(avatar ? { avatar_url: avatar } : {}),
+            ...(displayName ? { full_name: displayName, name: displayName } : {}),
+          },
+        });
+        if (updateErr && process.env.NODE_ENV === "development") {
+          console.warn("[auth/kakao/callback] profile sync failed:", updateErr.message);
+        }
+      }
+    } catch (e) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[auth/kakao/callback] me fetch failed:", e);
+      }
+    }
   }
 
   if (signed?.session?.access_token) {

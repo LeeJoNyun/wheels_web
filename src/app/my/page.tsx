@@ -1,9 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Settings, User } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { MyPageMenu } from "@/components/my/MyPageMenu";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { getMyListingCounts } from "@/lib/listing-filters";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,8 @@ export default async function MyPage({
   const rating = p?.rating ?? 0;
   const tradeCount = p?.trade_count ?? 0;
 
-  const counts = await getMyListingCounts(supabase, user.id);
+  const admin = createServiceRoleClient();
+  const counts = await getMyListingCounts(admin, user.id);
 
   let favoritesDisplay: number | null = null;
   const favRes = await supabase
@@ -44,6 +47,10 @@ export default async function MyPage({
 
   const updatedRaw = searchParams.updated;
   const profileJustUpdated = typeof updatedRaw === "string" && updatedRaw === "1";
+  const avatarFromMetadata =
+    (user.user_metadata?.avatar_url as string | undefined) ??
+    (user.user_metadata?.picture as string | undefined) ??
+    null;
 
   return (
     <div className="min-h-screen flex flex-col bg-dashboard">
@@ -65,8 +72,18 @@ export default async function MyPage({
         <section className="mt-8 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
-                <User className="h-7 w-7" strokeWidth={1.5} aria-hidden />
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand/10 text-brand">
+                {avatarFromMetadata ? (
+                  <Image
+                    src={avatarFromMetadata}
+                    alt="내 프로필 이미지"
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <User className="h-7 w-7" strokeWidth={1.5} aria-hidden />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">내 프로필</p>

@@ -199,6 +199,17 @@ export async function GET(request: Request) {
   }
 
   if (verified?.session?.access_token) {
+    if (avatar || displayName) {
+      const { error: updateErr } = await supabase.auth.updateUser({
+        data: {
+          ...(avatar ? { avatar_url: avatar } : {}),
+          ...(displayName ? { full_name: displayName, name: displayName } : {}),
+        },
+      });
+      if (updateErr && process.env.NODE_ENV === "development") {
+        console.warn("[auth/naver/callback] profile sync failed:", updateErr.message);
+      }
+    }
     await syncProfileWithWheelsApi(verified.session.access_token);
   }
 

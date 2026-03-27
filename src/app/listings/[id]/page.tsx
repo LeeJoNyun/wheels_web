@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import { User } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { ChatButton } from "@/components/listings/ChatButton";
 import { ListingImageGallery } from "@/components/listings/ListingImageGallery";
@@ -99,6 +101,7 @@ export default async function ListingDetailPage({
   const images = (listing.listing_images ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
   const consumables = firstOf(listing.listing_consumables);
   let seller: { nickname: string | null; rating: number; trade_count: number } | null = null;
+  let sellerAvatarUrl: string | null = null;
   const { data: sellerRow } = await supabase
     .from("profiles")
     .select("nickname,rating,trade_count")
@@ -107,6 +110,11 @@ export default async function ListingDetailPage({
   if (sellerRow) {
     seller = sellerRow as { nickname: string | null; rating: number; trade_count: number };
   }
+  const { data: sellerAuthData } = await supabase.auth.admin.getUserById(listing.user_id);
+  sellerAvatarUrl =
+    (sellerAuthData.user?.user_metadata?.avatar_url as string | undefined) ??
+    (sellerAuthData.user?.user_metadata?.picture as string | undefined) ??
+    null;
 
   const rawReturn = searchParams.returnTo;
   const returnToRaw = Array.isArray(rawReturn) ? rawReturn[0] : rawReturn;
@@ -149,7 +157,15 @@ export default async function ListingDetailPage({
             <ListingImageGallery images={images} />
             <div className="rounded-xl border bg-white p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-full bg-gray-200" />
+                <div className="relative h-11 w-11 overflow-hidden rounded-full bg-gray-200">
+                  {sellerAvatarUrl ? (
+                    <Image src={sellerAvatarUrl} alt="판매자 프로필 이미지" fill sizes="44px" className="object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-gray-500">
+                      <User className="h-5 w-5" aria-hidden />
+                    </div>
+                  )}
+                </div>
                 <div>
                   <p className="font-semibold text-gray-900">{seller?.nickname ?? "판매자"}</p>
                   <p className="text-sm text-gray-500">평점 {seller?.rating ?? 0} · 거래 {seller?.trade_count ?? 0}회</p>

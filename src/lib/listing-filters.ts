@@ -109,8 +109,8 @@ function coerceBike(b: unknown): BikeRow | null {
 
 function normalizeListingRow(raw: unknown): Row | null {
   const r = raw as Record<string, unknown>;
+  if (r.id == null || r.id === "") return null;
   const bike = coerceBike(r.bike);
-  if (!bike) return null;
   return {
     id: String(r.id),
     price: Number(r.price),
@@ -135,12 +135,19 @@ function matchesEngineCc(bikeCc: number, bounds: EngineCcBounds | null): boolean
 
 function rowMatches(row: Row, params: ListingFilterParams, engineBounds: EngineCcBounds | null): boolean {
   const bike = row.bike;
-  if (!bike) return false;
-  if (params.brand && bike.brand !== params.brand) return false;
-  if (params.model && !bike.model.toLowerCase().includes(params.model.trim().toLowerCase())) return false;
-  if (!matchesEngineCc(bike.engine_cc, engineBounds)) return false;
-  if (params.year_min && bike.year < Number(params.year_min)) return false;
-  if (params.year_max && bike.year > Number(params.year_max)) return false;
+
+  if (!bike) {
+    if (engineBounds) return false;
+    if (params.brand || params.model || params.year_min || params.year_max || params.segment) return false;
+    if (params.engine_cc || params.engine_cc_min || params.engine_cc_max) return false;
+  } else {
+    if (params.brand && bike.brand !== params.brand) return false;
+    if (params.model && !bike.model.toLowerCase().includes(params.model.trim().toLowerCase())) return false;
+    if (!matchesEngineCc(bike.engine_cc, engineBounds)) return false;
+    if (params.year_min && bike.year < Number(params.year_min)) return false;
+    if (params.year_max && bike.year > Number(params.year_max)) return false;
+  }
+
   if (params.mileage_min && row.mileage < Number(params.mileage_min)) return false;
   if (params.mileage_max && row.mileage > Number(params.mileage_max)) return false;
   if (params.price_min && row.price < Number(params.price_min) * 10000) return false;
@@ -148,14 +155,18 @@ function rowMatches(row: Row, params: ListingFilterParams, engineBounds: EngineC
   if (params.accident === "no" && row.accident) return false;
   if (params.tuning === "yes" && !row.tuning) return false;
   if (params.tuning === "no" && row.tuning) return false;
-  if (params.q) {
+  if (params.q?.trim()) {
     const qq = params.q.trim().toLowerCase();
     const desc = (row.description || "").toLowerCase();
-    const hit =
-      bike.brand.toLowerCase().includes(qq) ||
-      bike.model.toLowerCase().includes(qq) ||
-      desc.includes(qq);
-    if (!hit) return false;
+    if (bike) {
+      const hit =
+        bike.brand.toLowerCase().includes(qq) ||
+        bike.model.toLowerCase().includes(qq) ||
+        desc.includes(qq);
+      if (!hit) return false;
+    } else if (!desc.includes(qq)) {
+      return false;
+    }
   }
   return true;
 }

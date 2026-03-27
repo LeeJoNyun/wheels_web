@@ -23,6 +23,19 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/login?error=${encodeURIComponent(error.message)}`);
   }
 
+  const socialPicture =
+    (exchanged?.user?.user_metadata?.avatar_url as string | undefined) ??
+    (exchanged?.user?.user_metadata?.picture as string | undefined) ??
+    null;
+  if (socialPicture) {
+    const { error: updateErr } = await supabase.auth.updateUser({
+      data: { avatar_url: socialPicture },
+    });
+    if (updateErr && process.env.NODE_ENV === "development") {
+      console.warn("[auth/callback] avatar sync failed:", updateErr.message);
+    }
+  }
+
   if (exchanged?.session?.access_token) {
     await syncProfileWithWheelsApi(exchanged.session.access_token);
   }
