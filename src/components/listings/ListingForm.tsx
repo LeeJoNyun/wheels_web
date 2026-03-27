@@ -3,9 +3,14 @@
 import Image from "next/image";
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, GripVertical, X } from "lucide-react";
+import { Camera, ChevronDown, GripVertical, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { ConsumableStatus, DocumentStatus } from "@/types/database";
+import {
+  getReitwagenBrandLogo,
+  getReitwagenModelsByBrand,
+  REITWAGEN_BRAND_OPTIONS,
+} from "@/lib/reitwagen-brands";
 
 type FormState = {
   brand: string;
@@ -18,7 +23,12 @@ type FormState = {
   region: string;
   negotiable: "가능" | "불가";
   trade_options: string;
-  accident_slip_detail: string;
+  product_description: string;
+  owner_count: string;
+  special_notes: string;
+  other_notes: string;
+  tuning_items: string[];
+  tuning_custom: string;
   title: string;
   description: string;
   accident: boolean;
@@ -48,7 +58,12 @@ const INITIAL: FormState = {
   region: "",
   negotiable: "가능",
   trade_options: "",
-  accident_slip_detail: "",
+  product_description: "",
+  owner_count: "",
+  special_notes: "",
+  other_notes: "",
+  tuning_items: [],
+  tuning_custom: "",
   title: "",
   description: "",
   accident: false,
@@ -62,6 +77,17 @@ const INITIAL: FormState = {
   brake_pad: "",
   chain: "",
 };
+
+const TUNING_OPTIONS = [
+  "머플러",
+  "ECU",
+  "서스펜션",
+  "브레이크",
+  "휠/타이어",
+  "핸들/레버",
+  "외관(카울/도색)",
+  "등화류",
+] as const;
 
 function formatWithComma(raw: string) {
   const digits = raw.replace(/[^\d]/g, "");
@@ -84,12 +110,25 @@ export function ListingForm() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [brandOpen, setBrandOpen] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const modelOptions = useMemo(() => getReitwagenModelsByBrand(form.brand), [form.brand]);
+  const selectedBrandLogo = useMemo(() => getReitwagenBrandLogo(form.brand), [form.brand]);
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const toggleTuningItem = (item: string) => {
+    setForm((prev) => {
+      const has = prev.tuning_items.includes(item);
+      return {
+        ...prev,
+        tuning_items: has ? prev.tuning_items.filter((x) => x !== item) : [...prev.tuning_items, item],
+      };
+    });
   };
 
   const uploadImages = async (files: FileList | null) => {
@@ -155,6 +194,15 @@ export function ListingForm() {
       setMsg("제목을 입력해주세요.");
       return;
     }
+    if (!form.product_description.trim()) {
+      setMsg("상품 설명을 입력해주세요.");
+      return;
+    }
+
+    const tuningText = [
+      ...form.tuning_items,
+      ...(form.tuning_custom.trim() ? [form.tuning_custom.trim()] : []),
+    ].join(", ");
 
     const cafeBlock = [
       "카페 등록 양식",
@@ -162,7 +210,12 @@ export function ListingForm() {
       `2. 제작사/모델명: ${`${form.brand.trim()} ${form.model.trim()}`.trim() || "-"}`,
       `3. 제작연식: ${year || "-"}`,
       `4. 적산거리: ${mileage ? `${mileage.toLocaleString()}km` : "-"}`,
-      `5. 사고/슬립 여부: ${form.accident_slip_detail.trim() || "-"}`,
+      `5. 사고/슬립 여부: 사고 ${form.accident ? "있음" : "없음"} / 슬립 ${form.slip ? "있음" : "없음"}`,
+      `   상품 설명: ${form.product_description.trim() || "-"}`,
+      `   몇번째 차주: ${form.owner_count.trim() || "-"}`,
+      `   특이사항: ${form.special_notes.trim() || "-"}`,
+      `   기타: ${form.other_notes.trim() || "-"}`,
+      `   튜닝 내역: ${tuningText || "없음"}`,
       `6. 판매 희망가격: ${priceManwon ? `${priceManwon.toLocaleString()}만원` : "-"}`,
       `7. 흥정 가능 여부: ${form.negotiable}`,
       form.trade_options.trim() ? `   추가 옵션: ${form.trade_options.trim()}` : "",
@@ -202,7 +255,7 @@ export function ListingForm() {
             mileage,
             accident: form.accident,
             slip: form.slip,
-            tuning: form.tuning,
+            tuning: form.tuning || form.tuning_items.length > 0 || Boolean(form.tuning_custom.trim()),
             original_parts: form.original_parts,
             maintenance_history: form.maintenance_history || null,
             document_status: form.document_status,
@@ -297,11 +350,11 @@ export function ListingForm() {
         </label>
 
         <label className="block text-sm">
-          <span className="mb-1 block font-semibold text-gray-900">자세한 설명</span>
+          <span className="mb-1 block font-semibold text-gray-900">추가 설명</span>
           <textarea
             rows={5}
             className="w-full rounded-xl border px-3 py-3 placeholder:text-gray-400"
-            placeholder="신뢰할 수 있는 거래를 위해 상태와 정비내역을 자세히 적어주세요."
+            placeholder="위 항목 외 강조하고 싶은 내용을 자유롭게 입력하세요."
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
           />
@@ -320,11 +373,82 @@ export function ListingForm() {
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">제조사 *</span>
-          <input className="w-full rounded-xl border px-3 py-3" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setBrandOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                {selectedBrandLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selectedBrandLogo} alt="" className="h-5 w-5 shrink-0 rounded-full border object-cover" />
+                ) : (
+                  <span className="h-5 w-5 shrink-0 rounded-full border bg-gray-100" />
+                )}
+                <span className={`truncate ${form.brand ? "text-gray-900" : "text-gray-500"}`}>
+                  {form.brand || "제조사 선택"}
+                </span>
+              </span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-gray-500 transition-transform ${brandOpen ? "rotate-180" : ""}`} />
+            </button>
+            {brandOpen ? (
+              <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-xl border bg-white shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm((prev) => ({ ...prev, brand: "", model: "" }));
+                    setBrandOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+                >
+                  <span className="h-5 w-5 rounded-full border bg-gray-100" />
+                  제조사 선택 해제
+                </button>
+                {REITWAGEN_BRAND_OPTIONS.map((brand) => (
+                  <button
+                    type="button"
+                    key={brand.brandName}
+                    onClick={() => {
+                      const nextBrand = brand.brandName;
+                      const nextModels = getReitwagenModelsByBrand(nextBrand);
+                      setForm((prev) => ({
+                        ...prev,
+                        brand: nextBrand,
+                        model: nextModels.includes(prev.model) ? prev.model : "",
+                      }));
+                      setBrandOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+                  >
+                    {brand.logoImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={brand.logoImageUrl} alt="" className="h-5 w-5 shrink-0 rounded-full border object-cover" />
+                    ) : (
+                      <span className="h-5 w-5 shrink-0 rounded-full border bg-gray-100" />
+                    )}
+                    <span className="truncate">{brand.brandName}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">모델명 *</span>
-          <input className="w-full rounded-xl border px-3 py-3" value={form.model} onChange={(e) => setField("model", e.target.value)} />
+          <select
+            className="w-full rounded-xl border px-3 py-3"
+            value={form.model}
+            onChange={(e) => setField("model", e.target.value)}
+            disabled={!form.brand}
+          >
+            <option value="">{form.brand ? "모델 선택" : "먼저 제조사를 선택하세요"}</option>
+            {modelOptions.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-sm">
           <span className="mb-1 block font-semibold">연식 *</span>
@@ -385,20 +509,53 @@ export function ListingForm() {
           슬립 있음
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={form.tuning} onChange={(e) => setField("tuning", e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={form.tuning || form.tuning_items.length > 0 || Boolean(form.tuning_custom.trim())}
+            onChange={(e) => setField("tuning", e.target.checked)}
+          />
           튜닝 있음
         </label>
       </section>
 
       <section className="space-y-3">
         <label className="block text-sm">
-          <span className="mb-1 block font-semibold">사고/슬립 상세(카페 양식) *</span>
+          <span className="mb-1 block font-semibold">상품 설명 *</span>
           <textarea
             rows={3}
             className="w-full rounded-xl border px-3 py-3"
-            placeholder="예: 니그립 손상까지 외 무 / 단순 슬립 있음(우측 카울 스크래치) 등"
-            value={form.accident_slip_detail}
-            onChange={(e) => setField("accident_slip_detail", e.target.value)}
+            placeholder="차량 상태를 핵심 위주로 작성해 주세요. (예: 외관 상태, 주요 정비 상태)"
+            value={form.product_description}
+            onChange={(e) => setField("product_description", e.target.value)}
+          />
+        </label>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="text-sm">
+            <span className="mb-1 block font-semibold">몇번째 차주</span>
+            <input
+              className="w-full rounded-xl border px-3 py-3"
+              placeholder="예: 2차주"
+              value={form.owner_count}
+              onChange={(e) => setField("owner_count", e.target.value)}
+            />
+          </label>
+          <label className="text-sm sm:col-span-2">
+            <span className="mb-1 block font-semibold">특이사항</span>
+            <input
+              className="w-full rounded-xl border px-3 py-3"
+              placeholder="예: 엔진 누유 없음, 최근 소모품 교체"
+              value={form.special_notes}
+              onChange={(e) => setField("special_notes", e.target.value)}
+            />
+          </label>
+        </div>
+        <label className="block text-sm">
+          <span className="mb-1 block font-semibold">기타</span>
+          <input
+            className="w-full rounded-xl border px-3 py-3"
+            placeholder="예: 실물 보시면 상태 좋습니다."
+            value={form.other_notes}
+            onChange={(e) => setField("other_notes", e.target.value)}
           />
         </label>
       </section>
@@ -412,11 +569,27 @@ export function ListingForm() {
             <option value="서류 없음">서류 없음</option>
           </select>
         </label>
-        <label className="text-sm flex items-end">
-          <span className="inline-flex items-center gap-2">
-            <input type="checkbox" checked={form.original_parts} onChange={(e) => setField("original_parts", e.target.checked)} />
-            순정 부품 보유
-          </span>
+        <div className="text-xs text-gray-500 sm:pt-7">순정 부품 보유 여부는 아래 상품 설명/기타에 자유롭게 적어주세요.</div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="font-semibold text-gray-900">튜닝 항목</h3>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {TUNING_OPTIONS.map((item) => (
+            <label key={item} className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.tuning_items.includes(item)} onChange={() => toggleTuningItem(item)} />
+              {item}
+            </label>
+          ))}
+        </div>
+        <label className="block text-sm">
+          <span className="mb-1 block font-semibold">기타 튜닝(직접 입력)</span>
+          <input
+            className="w-full rounded-xl border px-3 py-3"
+            placeholder="예: 프레임 슬라이더, 퀵시프터"
+            value={form.tuning_custom}
+            onChange={(e) => setField("tuning_custom", e.target.value)}
+          />
         </label>
       </section>
 
